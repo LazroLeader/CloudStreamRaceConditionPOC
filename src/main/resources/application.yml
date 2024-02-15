@@ -1,0 +1,40 @@
+kafka:
+  brokers: localhost:9092
+  word-topic-name: word-topic
+  dummy-output-topic: dummy-topic
+
+spring:
+  cloud:
+    function:
+      definition: wordsProcessor
+    stream:
+      bindings:
+        wordsProcessor-in-0:
+          binder: kstream
+          destination: word-topic
+          content-type: application/json
+          consumer:
+            concurrency: 10
+            use-native-decoding: false
+        wordsProcessor-out-0:
+          binder: kstream
+          destination: dummy-topic
+          content-type: application/json
+          producer:
+            use-native-encoding: false
+
+      binders:
+        kstream:
+          type: kstream
+          environment:
+            spring:
+              cloud:
+                stream:
+                  kafka:
+                    streams:
+                      binder:
+                        configuration:
+                          default.key.serde: org.apache.kafka.common.serialization.Serdes$StringSerde
+                          default.value.serde: org.apache.kafka.common.serialization.Serdes$ByteArraySerde
+                          auto.offset.reset: earliest
+                        brokers: ${kafka.brokers}
